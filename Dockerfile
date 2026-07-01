@@ -1,9 +1,11 @@
-FROM node:lts-alpine AS base
+FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache libstdc++
 
 COPY package.json package-lock.json ./
 
 FROM base AS build
+RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 COPY . .
