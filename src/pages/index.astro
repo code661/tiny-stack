@@ -2,17 +2,31 @@
 import Layout from '../layouts/Layout.astro';
 import Comment from '../components/Comment.astro';
 import CommentForm from '../components/CommentForm.astro';
+import { eq } from 'drizzle-orm';
 import { db } from '../utils/db';
 import { comments } from '../models/schema';
 
 if (Astro.request.method === 'POST') {
   const data = await Astro.request.formData();
-  const author = data.get('author');
-  const content = data.get('content');
-  await db.insert(comments).values({
-    author: author as string,
-    content: content as string
-  });
+  const action = data.get('_action');
+
+  if (action === 'delete') {
+    const commentId = Number(data.get('commentId'));
+
+    if (Number.isInteger(commentId)) {
+      await db.delete(comments).where(eq(comments.id, commentId));
+    }
+  } else {
+    const author = data.get('author');
+    const content = data.get('content');
+
+    if (typeof author === 'string' && typeof content === 'string') {
+      await db.insert(comments).values({
+        author,
+        content
+      });
+    }
+  }
 }
 
 const cms = await db.query.comments.findMany();
